@@ -42,6 +42,8 @@ type GCPLogEntry struct {
 
 	TextPayload string `json:"textPayload"`
 
+	JSONPayload map[string]interface{} `json:"jsonPayload"`
+
 	// NOTE(kavi): There are other fields on GCPLogEntry. but we need only need above fields for now
 	// anyway we will be sending the entire entry to Loki.
 }
@@ -118,6 +120,11 @@ func parseGCPLogsEntry(data []byte, other model.LabelSet, otherInternal labels.L
 	// Send only `ge.textPayload` as log line if its present and user don't explicitly ask for the whole log.
 	if !useFullLine && strings.TrimSpace(ge.TextPayload) != "" {
 		line = ge.TextPayload
+	}
+
+	if !useFullLine && ge.JSONPayload != nil {
+		b, _ := json.Marshal(ge.JSONPayload)
+		line = string(b)
 	}
 
 	return api.Entry{
